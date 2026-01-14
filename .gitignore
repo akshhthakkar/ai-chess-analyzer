@@ -1,0 +1,22 @@
+# Visual Studio / VSCode
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+env/
+.venv/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
