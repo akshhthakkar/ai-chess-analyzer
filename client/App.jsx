@@ -1,9 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
   const [move, setMove] = useState("");
   const [history, setHistory] = useState([]);
   const [analysis, setAnalysis] = useState("");
+  const [serverStatus, setServerStatus] = useState("Checking...");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/health")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") setServerStatus("Online");
+        else setServerStatus("Offline");
+      })
+      .catch(() => setServerStatus("Offline"));
+  }, []);
 
   const handleAnalyze = () => {
     if (move.trim() === "") return;
@@ -33,9 +44,14 @@ function App() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ color: "#2d2d2d", marginBottom: "16px" }}>
-          AI Chess Analyzer
-        </h1>
+        <header style={{ marginBottom: 24 }}>
+          <h1 style={{ color: "#2d2d2d", marginBottom: "16px" }}>
+            ♟️ AI Chess Analyzer
+          </h1>
+          <span style={{ color: serverStatus === "Online" ? "green" : "red" }}>
+            Server: {serverStatus}
+          </span>
+        </header>
         <p style={{ color: "#555", marginBottom: "24px" }}>
           Analyze your chess moves with AI!
         </p>
