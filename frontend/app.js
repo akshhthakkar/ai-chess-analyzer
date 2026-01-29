@@ -218,7 +218,7 @@ function displayExplanation(moveData) {
   el.expClassification.className =
     "explanation-badge " + moveData.classification;
 
-  // Your move explanation
+  // Your move explanation (start with template)
   el.expDescription.textContent =
     exp.description || "No description available.";
   el.expImpact.textContent = exp.impact || "";
@@ -236,6 +236,54 @@ function displayExplanation(moveData) {
 
   // Classification reason
   el.expReason.textContent = exp.classificationReason || "";
+
+  // Fetch AI explanation (async)
+  fetchGeminiExplanation(moveData);
+}
+
+async function fetchGeminiExplanation(moveData) {
+  try {
+    // Get FEN for current position (before this move)
+    const tempGame = new Chess();
+    for (let i = 0; i < currentMoveIndex; i++) {
+      if (gameHistory[i]) {
+        tempGame.move(gameHistory[i].move);
+      }
+    }
+    const fen = tempGame.fen();
+
+    const res = await fetch(`${API_URL}/api/explain-move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fen: fen,
+        move: moveData.move,
+        isWhite: moveData.isWhite,
+        classification: moveData.classification,
+        bestMove: moveData.bestMove,
+        cpLoss: moveData.cpLoss || 0,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.explanation) {
+      // Update with AI explanation
+      el.expDescription.innerHTML = formatAIExplanation(data.explanation);
+      el.expImpact.textContent = "";
+      el.expBestSection.classList.add("hidden");
+      el.expReason.innerHTML = `<span style="color: var(--accent); font-size: 10px;">✨ AI Coach</span>`;
+    }
+  } catch (e) {
+    console.log("Gemini fallback to template:", e);
+  }
+}
+
+function formatAIExplanation(text) {
+  // Clean and format AI response
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
 }
 
 function hideExplanation() {

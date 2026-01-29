@@ -12,7 +12,12 @@ Endpoints:
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+from dotenv import load_dotenv
 from stockfish_engine import ChessAnalyzer, find_stockfish
+from gemini_coach import get_coach
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -243,3 +248,92 @@ if __name__ == "__main__":
     print("=" * 50)
     
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+@app.route("/api/explain-move", methods=["POST"])
+def explain_move():
+    """
+    Get AI-powered explanation for a chess move.
+    
+    Request Body:
+        {
+            "fen": "position FEN",
+            "move": "e4",
+            "isWhite": true,
+            "classification": "best",
+            "bestMove": "e4",
+            "cpLoss": 0
+        }
+    """
+    try:
+        data = request.get_json()
+        
+        coach = get_coach()
+        result = coach.explain_move(
+            position_fen=data.get("fen", ""),
+            move_san=data.get("move", ""),
+            is_white=data.get("isWhite", True),
+            classification=data.get("classification", "unknown"),
+            best_move_san=data.get("bestMove"),
+            cp_loss=data.get("cpLoss", 0)
+        )
+        
+        return jsonify({"success": True, **result})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/game-summary", methods=["POST"])
+def game_summary():
+    """
+    Get AI-generated game summary.
+    
+    Request Body:
+        {
+            "moves": [...],
+            "whiteAccuracy": 85.5,
+            "blackAccuracy": 82.3
+        }
+    """
+    try:
+        data = request.get_json()
+        
+        coach = get_coach()
+        summary = coach.analyze_game_summary(
+            moves_data=data.get("moves", []),
+            white_accuracy=data.get("whiteAccuracy", 0),
+            black_accuracy=data.get("blackAccuracy", 0)
+        )
+        
+        return jsonify({"success": True, "summary": summary})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/teach", methods=["POST"])
+def teach_concept():
+    """
+    Teach a chess concept using AI.
+    
+    Request Body:
+        {
+            "concept": "castling" or "what is a fork?"
+        }
+    """
+    try:
+        data = request.get_json()
+        concept = data.get("concept", "")
+        
+        if not concept:
+            return jsonify({"success": False, "error": "No concept provided"}), 400
+        
+        coach = get_coach()
+        explanation = coach.teach_concept(concept)
+        
+        return jsonify({"success": True, "explanation": explanation})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
