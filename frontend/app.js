@@ -21,7 +21,63 @@ document.addEventListener("DOMContentLoaded", () => {
   initEventListeners();
   checkServerHealth();
   setInterval(checkServerHealth, 30000);
+
+  // Restore saved state
+  restoreState();
 });
+
+// State persistence
+function saveState() {
+  const state = {
+    gameHistory: gameHistory,
+    currentMoveIndex: currentMoveIndex,
+    analysisResult: analysisResult,
+    pgnText: el.pgnInput ? el.pgnInput.value : "",
+  };
+  localStorage.setItem("chessAnalyzerState", JSON.stringify(state));
+}
+
+function restoreState() {
+  try {
+    const saved = localStorage.getItem("chessAnalyzerState");
+    if (!saved) return;
+
+    const state = JSON.parse(saved);
+
+    if (state.pgnText && el.pgnInput) {
+      el.pgnInput.value = state.pgnText;
+    }
+
+    if (state.gameHistory && state.gameHistory.length > 0) {
+      gameHistory = state.gameHistory;
+      analysisResult = state.analysisResult;
+      currentMoveIndex = state.currentMoveIndex || -1;
+
+      // Replay moves to current position
+      game.reset();
+      for (let i = 0; i <= currentMoveIndex && i < gameHistory.length; i++) {
+        if (gameHistory[i]) {
+          game.move(gameHistory[i].move);
+        }
+      }
+
+      board.position(game.fen());
+      updateMoveList();
+
+      if (analysisResult) {
+        displayReport(analysisResult);
+      }
+
+      console.log("State restored:", gameHistory.length, "moves");
+    }
+  } catch (e) {
+    console.log("Could not restore state:", e);
+  }
+}
+
+function clearState() {
+  localStorage.removeItem("chessAnalyzerState");
+}
 
 function initElements() {
   // Board navigation
@@ -60,6 +116,7 @@ function initElements() {
 
   // Explanation panel
   el.explanationPanel = document.getElementById("explanation-panel");
+  el.btnClosePanel = document.getElementById("btn-close-panel");
   el.expMoveName = document.getElementById("exp-move-name");
   el.expClassification = document.getElementById("exp-classification");
   el.expDescription = document.getElementById("exp-description");
@@ -111,6 +168,15 @@ function onDrop(source, target) {
   const move = game.move({ from: source, to: target, promotion: "q" });
   if (move === null) return "snapback";
 
+  // Handle branching - remove future moves if we're in the middle of a game
+  if (currentMoveIndex < gameHistory.length - 1) {
+    gameHistory = gameHistory.slice(0, currentMoveIndex + 1);
+  }
+
+  // Clear stale analysis since game changed
+  analysisResult = null;
+  hideExplanation();
+
   // Add to game history
   gameHistory.push({
     fen: game.fen(),
@@ -119,7 +185,10 @@ function onDrop(source, target) {
     isWhite: move.color === "w",
   });
   currentMoveIndex = gameHistory.length - 1;
+
   updateMoveList();
+  updateEvalBar(0); // Reset eval
+  saveState();
 }
 
 function onSnapEnd() {
@@ -167,6 +236,11 @@ function initEventListeners() {
 
   // Position analysis
   el.btnAnalyze.addEventListener("click", analyzePosition);
+
+  // Explanation panel
+  if (el.btnClosePanel) {
+    el.btnClosePanel.addEventListener("click", hideExplanation);
+  }
 }
 
 function goToMove(index) {
@@ -357,6 +431,7 @@ function loadPgn() {
     board.position(game.fen());
     updateMoveList();
     hideError();
+    saveState(); // Persist to localStorage
   } catch (e) {
     showError("Failed to parse PGN: " + e.message);
   }
@@ -449,6 +524,8 @@ async function analyzeFullGame() {
       el.tabContents.forEach((c) => c.classList.remove("active"));
       document.querySelector('[data-tab="report"]').classList.add("active");
       document.getElementById("tab-report").classList.add("active");
+
+      saveState(); // Persist analysis results
     } else {
       showError(data.error || "Analysis failed");
     }

@@ -20,7 +20,8 @@ from gemini_coach import get_coach
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Enable CORS for all routes, allowing all origins, methods, and headers
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize Stockfish engine
 STOCKFISH_PATH = os.environ.get("STOCKFISH_PATH") or find_stockfish()
