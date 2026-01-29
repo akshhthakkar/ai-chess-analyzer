@@ -93,6 +93,36 @@ Example: 1. e4 e5 2. Nf3 Nc6 3. Bb5"
               <div class="move-list-container">
                 <div id="move-list" class="move-list"></div>
               </div>
+
+              <!-- Move Explanation Panel -->
+              <div id="explanation-panel" class="explanation-panel hidden">
+                <div class="explanation-header">
+                  <span class="explanation-move" id="exp-move-name">e4</span>
+                  <span class="explanation-badge" id="exp-classification"
+                    >Best</span
+                  >
+                </div>
+                <div class="explanation-section">
+                  <h4>Your Move</h4>
+                  <p id="exp-description">Description of your move...</p>
+                  <p class="explanation-impact" id="exp-impact">
+                    Impact of your move...
+                  </p>
+                </div>
+                <div
+                  class="explanation-section best-move-section"
+                  id="exp-best-section"
+                >
+                  <h4>Better Move: <span id="exp-best-move">Nf3</span></h4>
+                  <p id="exp-best-description">Description of best move...</p>
+                  <p class="explanation-impact" id="exp-best-impact">
+                    Impact...
+                  </p>
+                </div>
+                <p class="explanation-reason" id="exp-reason">
+                  Classification reason
+                </p>
+              </div>
             </div>
 
             <!-- Engine Tab -->
@@ -106,7 +136,7 @@ Example: 1. e4 e5 2. Nf3 Nc6 3. Bb5"
 
               <div class="engine-settings">
                 <div class="setting-row">
-                  <label>Depth</label>
+                  <label for="depth-slider">Depth</label>
                   <input
                     type="range"
                     id="depth-slider"
@@ -117,7 +147,7 @@ Example: 1. e4 e5 2. Nf3 Nc6 3. Bb5"
                   <span id="depth-value">20</span>
                 </div>
                 <div class="setting-row">
-                  <label>Lines</label>
+                  <label for="lines-slider">Lines</label>
                   <input
                     type="range"
                     id="lines-slider"

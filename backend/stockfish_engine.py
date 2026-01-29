@@ -271,6 +271,18 @@ class ChessAnalyzer:
                     else:
                         black_losses.append(cp_loss)
                     
+                    # Generate explanation (need to use board state BEFORE the move)
+                    board.pop()  # Undo move temporarily
+                    explanation = MoveExplainer.explain_move(board, move, 
+                                                             is_best=(move == best_move), 
+                                                             cp_loss=cp_loss)
+                    best_move_explanation = None
+                    if best_move and move != best_move:
+                        best_move_explanation = MoveExplainer.explain_move(board, best_move, 
+                                                                           is_best=True, 
+                                                                           cp_loss=0)
+                    board.push(move)  # Redo the move
+                    
                     analyzed_moves.append({
                         "moveNumber": (i // 2) + 1,
                         "move": move_san,
@@ -280,7 +292,9 @@ class ChessAnalyzer:
                         "evalText": f"{current_eval/100:+.2f}",
                         "bestMove": board.san(best_move) if best_move else None,
                         "cpLoss": cp_loss,
-                        "classification": classification
+                        "classification": classification,
+                        "explanation": explanation,
+                        "bestMoveExplanation": best_move_explanation
                     })
                     
                     prev_eval = current_eval
@@ -291,7 +305,8 @@ class ChessAnalyzer:
                         "move": move_san,
                         "isWhite": not board.turn,
                         "error": str(e),
-                        "classification": "unknown"
+                        "classification": "unknown",
+                        "explanation": {"description": "Error analyzing this move.", "impact": "", "classificationReason": ""}
                     })
             
             # Calculate accuracy

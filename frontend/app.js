@@ -58,6 +58,18 @@ function initElements() {
   // Report tab
   el.reportContent = document.getElementById("report-content");
 
+  // Explanation panel
+  el.explanationPanel = document.getElementById("explanation-panel");
+  el.expMoveName = document.getElementById("exp-move-name");
+  el.expClassification = document.getElementById("exp-classification");
+  el.expDescription = document.getElementById("exp-description");
+  el.expImpact = document.getElementById("exp-impact");
+  el.expBestSection = document.getElementById("exp-best-section");
+  el.expBestMove = document.getElementById("exp-best-move");
+  el.expBestDescription = document.getElementById("exp-best-description");
+  el.expBestImpact = document.getElementById("exp-best-impact");
+  el.expReason = document.getElementById("exp-reason");
+
   // Status
   el.serverBadge = document.getElementById("server-badge");
   el.serverStatus = document.getElementById("server-status");
@@ -181,9 +193,54 @@ function goToMove(index) {
     const moveData = analysisResult.moves[currentMoveIndex];
     if (moveData) {
       updateEvalBar(moveData.eval);
+      displayExplanation(moveData);
     }
   } else {
     updateEvalBar(0);
+    hideExplanation();
+  }
+}
+
+function displayExplanation(moveData) {
+  if (!moveData.explanation) {
+    hideExplanation();
+    return;
+  }
+
+  const exp = moveData.explanation;
+
+  // Show panel
+  el.explanationPanel.classList.remove("hidden");
+
+  // Move name and classification
+  el.expMoveName.textContent = moveData.move;
+  el.expClassification.textContent = moveData.classification;
+  el.expClassification.className =
+    "explanation-badge " + moveData.classification;
+
+  // Your move explanation
+  el.expDescription.textContent =
+    exp.description || "No description available.";
+  el.expImpact.textContent = exp.impact || "";
+
+  // Best move (if different)
+  if (moveData.bestMoveExplanation && moveData.bestMove !== moveData.move) {
+    el.expBestSection.classList.remove("hidden");
+    el.expBestMove.textContent = moveData.bestMove;
+    el.expBestDescription.textContent =
+      moveData.bestMoveExplanation.description || "";
+    el.expBestImpact.textContent = moveData.bestMoveExplanation.impact || "";
+  } else {
+    el.expBestSection.classList.add("hidden");
+  }
+
+  // Classification reason
+  el.expReason.textContent = exp.classificationReason || "";
+}
+
+function hideExplanation() {
+  if (el.explanationPanel) {
+    el.explanationPanel.classList.add("hidden");
   }
 }
 
