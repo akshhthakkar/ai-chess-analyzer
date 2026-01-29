@@ -111,6 +111,13 @@ function initElements() {
   el.loading = document.getElementById("loading");
   el.analysisLines = document.getElementById("analysis-lines");
 
+  // Coach elements
+  el.btnAskCoach = document.getElementById("btn-ask-coach");
+  el.coachSuggestion = document.getElementById("coach-suggestion");
+  el.coachMove = document.getElementById("coach-move");
+  el.btnCloseCoach = document.getElementById("btn-close-coach");
+  el.coachExplanation = document.getElementById("coach-explanation");
+
   // Report tab
   el.reportContent = document.getElementById("report-content");
 
@@ -240,6 +247,16 @@ function initEventListeners() {
   // Explanation panel
   if (el.btnClosePanel) {
     el.btnClosePanel.addEventListener("click", hideExplanation);
+  }
+
+  // AI Coach
+  if (el.btnAskCoach) {
+    el.btnAskCoach.addEventListener("click", askCoach);
+  }
+  if (el.btnCloseCoach) {
+    el.btnCloseCoach.addEventListener("click", () => {
+      el.coachSuggestion.classList.add("hidden");
+    });
   }
 }
 
@@ -697,4 +714,41 @@ function showError(msg) {
 
 function hideError() {
   el.errorDisplay.classList.add("hidden");
+}
+
+async function askCoach() {
+  if (game.game_over()) {
+    showError("Game is over!");
+    return;
+  }
+
+  el.btnAskCoach.disabled = true;
+  el.btnAskCoach.innerHTML = '<span class="btn-icon">🔄</span> Analyzing...';
+  el.coachSuggestion.classList.add("hidden");
+
+  try {
+    const fen = game.fen();
+
+    const response = await fetch(`${API_URL}/api/suggest-move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fen: fen }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      el.coachSuggestion.classList.remove("hidden");
+      el.coachMove.textContent = data.suggestion;
+      el.coachExplanation.innerHTML = formatAIExplanation(data.explanation);
+    } else {
+      showError(data.error || "Coach failed to help");
+    }
+  } catch (e) {
+    showError("Could not ask coach: " + e.message);
+  } finally {
+    el.btnAskCoach.disabled = false;
+    el.btnAskCoach.innerHTML =
+      '<span class="btn-icon">✨</span> Analyze Position';
+  }
 }

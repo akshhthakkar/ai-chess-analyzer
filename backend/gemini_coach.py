@@ -33,7 +33,7 @@ class GeminiChessCoach:
     """Uses Gemini to generate context-aware chess explanations."""
     
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     def _describe_position(self, fen: str) -> str:
         """Convert FEN to human-readable position description."""
@@ -251,6 +251,42 @@ Keep it to 5-6 sentences total. Be encouraging!"""
             return response.text.strip()
         except Exception as e:
             return f"Sorry, I couldn't explain '{concept}' right now. Try asking again!"
+
+    def suggest_move(
+        self,
+        position_fen: str,
+        best_move: str,
+        eval_score: str
+    ) -> Dict[str, str]:
+        """Suggest the best move with an explanation."""
+        
+        position_desc = self._describe_position(position_fen)
+        
+        prompt = f"""{CHESS_COACH_SYSTEM}
+        
+POSITION:
+{position_desc}
+
+BEST MOVE: {best_move} (Eval: {eval_score})
+
+TASK:
+Explain WHY {best_move} is the best move here.
+1. What does it attack or defend?
+2. What is the plan after this move?
+3. Mention any threats if we don't play this.
+
+Keep it short (2-3 sentences)."""
+
+        try:
+            response = self.model.generate_content(prompt)
+            explanation = response.text.strip()
+        except Exception as e:
+            explanation = f"{best_move} is strong because it improves your position. (AI Error: {str(e)})"
+            
+        return {
+            "suggestion": f"I suggest playing {best_move}",
+            "explanation": explanation
+        }
 
 
 # Singleton instance

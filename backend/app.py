@@ -10,8 +10,9 @@ Endpoints:
 """
 
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
+import logging
+import traceback
 from dotenv import load_dotenv
 from stockfish_engine import ChessAnalyzer, find_stockfish
 from gemini_coach import get_coach
@@ -20,8 +21,29 @@ from gemini_coach import get_coach
 load_dotenv()
 
 app = Flask(__name__)
-# Enable CORS for all routes, allowing all origins, methods, and headers
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+# Manual CORS handling to prevent any library issues
+@app.after_request
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+    return response
+
+# Configure logging
+logging.basicConfig(filename='server_errors.log', level=logging.ERROR)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all exceptions and return 500 (headers added by after_request)."""
+    # Log the full traceback
+    logging.error(f"Unhandled Exception: {str(e)}")
+    logging.error(traceback.format_exc())
+    
+    response = jsonify({"success": False, "error": str(e)})
+    response.status_code = 500
+    return response
 
 # Initialize Stockfish engine
 STOCKFISH_PATH = os.environ.get("STOCKFISH_PATH") or find_stockfish()
@@ -51,8 +73,10 @@ def health_check():
     })
 
 
-@app.route("/api/analyze", methods=["POST"])
+@app.route("/api/analyze", methods=["POST", "OPTIONS"])
 def analyze_position():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Analyze a chess position with multiple principal variations.
     
@@ -112,8 +136,10 @@ def analyze_position():
         }), 500
 
 
-@app.route("/api/best-move", methods=["POST"])
+@app.route("/api/best-move", methods=["POST", "OPTIONS"])
 def get_best_move():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Get the single best move for a position (quick analysis).
     
@@ -160,8 +186,10 @@ def get_best_move():
         }), 500
 
 
-@app.route("/api/analyze-game", methods=["POST"])
+@app.route("/api/analyze-game", methods=["POST", "OPTIONS"])
 def analyze_game():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Analyze a full chess game and classify each move.
     
@@ -234,25 +262,13 @@ def analyze_game():
         }), 500
 
 
-if __name__ == "__main__":
-    print("=" * 50)
-    print("AI Chess Analyzer Backend")
-    print("=" * 50)
-    
-    if STOCKFISH_PATH:
-        print(f"Stockfish found at: {STOCKFISH_PATH}")
-    else:
-        print("WARNING: Stockfish not found!")
-        print("Please set STOCKFISH_PATH or place stockfish in 'engines/' folder")
-    
-    print("\nStarting server on http://localhost:5000")
-    print("=" * 50)
-    
-    app.run(host="0.0.0.0", port=5000, debug=True)
 
 
-@app.route("/api/explain-move", methods=["POST"])
+
+@app.route("/api/explain-move", methods=["POST", "OPTIONS"])
 def explain_move():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Get AI-powered explanation for a chess move.
     
@@ -285,8 +301,10 @@ def explain_move():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/api/game-summary", methods=["POST"])
+@app.route("/api/game-summary", methods=["POST", "OPTIONS"])
 def game_summary():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Get AI-generated game summary.
     
@@ -313,8 +331,10 @@ def game_summary():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/api/teach", methods=["POST"])
+@app.route("/api/teach", methods=["POST", "OPTIONS"])
 def teach_concept():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     """
     Teach a chess concept using AI.
     
@@ -337,4 +357,65 @@ def teach_concept():
         
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/suggest-move", methods=["POST", "OPTIONS"])
+def suggest_move():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+    """
+    Get AI suggestion for the current position.
+    
+    Request Body:
+        {
+            "fen": "rnbq...",
+            "depth": 15
+        }
+    """
+    try:
+        data = request.get_json()
+        fen = data.get("fen", "")
+        
+        # First get best move from Stockfish
+        engine = get_analyzer()
+        engine_result = engine.get_best_move_new(fen)
+        logging.error(f"DEBUG ENGINE RESULT: {engine_result}")
+        
+        if not engine_result["success"]:
+            return jsonify({"success": False, "error": "Engine analysis failed"}), 500
+            
+        best_move_san = engine_result["move"]
+        eval_score = engine_result["score"]
+        
+        # Then get AI explanation
+        coach = get_coach()
+        suggestion = coach.suggest_move(
+            position_fen=fen,
+            best_move=best_move_san,
+            eval_score=eval_score 
+        )
+        
+        return jsonify({"success": True, **suggestion})
+        
+    except Exception as e:
+        logging.error(f"Error in suggest_move: {str(e)}")
+        logging.error(traceback.format_exc())
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("AI Chess Analyzer Backend")
+    print("=" * 50)
+    
+    if STOCKFISH_PATH:
+        print(f"Stockfish found at: {STOCKFISH_PATH}")
+    else:
+        print("WARNING: Stockfish not found!")
+        print("Please set STOCKFISH_PATH or place stockfish in 'engines/' folder")
+    
+    print("\nStarting server on http://localhost:5000")
+    print("=" * 50)
+    
+    app.run(host="0.0.0.0", port=5000, debug=True)
 

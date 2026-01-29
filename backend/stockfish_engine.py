@@ -104,6 +104,41 @@ class ChessAnalyzer:
                 "position": fen
             }
     
+    def get_best_move_new(self, fen: str, depth: int = 15) -> Dict[str, Any]:
+        """
+        Quickly get the single best move for a position.
+        
+        Args:
+            fen: Position FEN
+            depth: Search depth
+            
+        Returns:
+            Dict with success, move (SAN), and score
+        """
+        try:
+            board = chess.Board(fen)
+            result = self.engine.play(board, chess.engine.Limit(depth=depth))
+            
+            if not result.move:
+                return {"success": False, "error": "No legal moves"}
+                
+            move_san = board.san(result.move)
+            
+            # Get basic evaluation for this move
+            info = self.engine.analyse(board, chess.engine.Limit(depth=depth), multipv=1)
+            score_data = self._parse_analysis_info(info[0], board)
+            
+            return {
+                "success": True,
+                "move": move_san,
+                "score": score_data["scoreText"],
+                "scoreRaw": score_data
+            }
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+
     def _parse_analysis_info(
         self,
         info: chess.engine.InfoDict,

@@ -404,6 +404,162 @@ body {
   color: var(--text-muted);
 }
 
+/* Premium AI Coach */
+.coach-card {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.coach-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+}
+
+.coach-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.coach-avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4338ca;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-emoji {
+  font-size: 20px;
+}
+
+.coach-info h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+
+.coach-status {
+  margin: 0;
+  font-size: 11px;
+  color: #a5b4fc;
+}
+
+.btn-ask-glow {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-ask-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.btn-ask-glow:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+.coach-response-box {
+  background: #1e1e24;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  border: 1px solid #2d2d3a;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #2d2d3a;
+  padding-bottom: 8px;
+}
+
+.suggest-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+}
+
+.suggest-move {
+  font-family: "Roboto Mono", monospace;
+  color: #818cf8;
+  font-size: 14px;
+}
+
+.response-content p {
+  color: #e5e7eb;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-dismiss-coach {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+  text-align: right;
+  padding: 4px;
+}
+.btn-dismiss-coach:hover {
+  color: #9ca3af;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
 .engine-settings {
   display: flex;
   flex-direction: column;
@@ -769,4 +925,81 @@ body {
     max-width: 450px;
     margin: 0 auto;
   }
+}
+
+/* FIX: Theme-Aligned Coach UI Overrides */
+.coach-card {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Remove the gradient strip if it clashes */
+.coach-card::before {
+  display: none !important;
+}
+/* Add theme accent strip */
+.coach-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent);
+}
+
+.coach-header-row {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.coach-avatar {
+  background: var(--accent-bg) !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+  box-shadow: none !important;
+}
+
+.coach-info h3 {
+  color: var(--text-primary) !important;
+}
+
+.coach-status {
+  color: var(--text-secondary) !important;
+}
+
+.btn-ask-glow {
+  background: var(--accent) !important;
+  color: #000 !important; /* Contrast on green accent */
+  box-shadow: none !important;
+  border-radius: var(--radius) !important;
+}
+.btn-ask-glow:hover {
+  background: var(--accent-hover) !important;
+  transform: translateY(-1px);
+}
+
+.coach-response-box {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.response-header {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.suggest-move {
+  color: var(--accent) !important;
+}
+
+.response-content p {
+  color: var(--text-secondary) !important;
 }

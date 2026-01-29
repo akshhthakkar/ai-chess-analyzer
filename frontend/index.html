@@ -139,6 +139,40 @@ Example: 1. e4 e5 2. Nf3 Nc6 3. Bb5"
                 >
               </div>
 
+              <!-- AI Coach Section (Premium UI) -->
+              <div class="coach-card">
+                <div class="coach-header-row">
+                  <div class="coach-avatar">
+                    <span class="avatar-emoji">🧠</span>
+                  </div>
+                  <div class="coach-info">
+                    <h3 class="coach-name">AI Grandmaster</h3>
+                    <p class="coach-status">Powered by Gemini 2.5</p>
+                  </div>
+                </div>
+
+                <div class="coach-body">
+                  <button id="btn-ask-coach" class="btn-ask-glow">
+                    <span class="btn-icon">✨</span> Analyze Position
+                  </button>
+
+                  <div id="coach-suggestion" class="coach-response-box hidden">
+                    <div class="response-header">
+                      <span class="suggest-label">Suggestion</span>
+                      <strong class="suggest-move" id="coach-move">e4</strong>
+                    </div>
+                    <div class="response-content">
+                      <p id="coach-explanation"></p>
+                    </div>
+                    <button class="btn-dismiss-coach" id="btn-close-coach">
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="divider" />
+
               <div class="engine-settings">
                 <div class="setting-row">
                   <label for="depth-slider">Depth</label>
