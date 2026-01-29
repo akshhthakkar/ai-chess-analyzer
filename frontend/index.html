@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chess Analyzer</title>
+
+    <!-- Stylesheets -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Chess piece images base path -->
+    <script>
+      window.CHESSBOARD_PIECE_PATH =
+        "https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/";
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <h1>♟️ AI Chess Analyzer</h1>
+        <p class="subtitle">Analyze positions with Stockfish engine</p>
+      </header>
+
+      <!-- Main Content Grid -->
+      <main class="main-grid">
+        <!-- Board Panel -->
+        <section class="panel board-panel">
+          <h2>Chess Board</h2>
+
+          <!-- Chessboard Container -->
+          <div id="board" class="chessboard"></div>
+
+          <!-- Board Controls -->
+          <div class="board-controls">
+            <button
+              id="btn-start"
+              class="btn btn-secondary"
+              title="Reset to starting position"
+            >
+              ↺ Start
+            </button>
+            <button
+              id="btn-clear"
+              class="btn btn-secondary"
+              title="Clear the board"
+            >
+              ✕ Clear
+            </button>
+            <button
+              id="btn-flip"
+              class="btn btn-secondary"
+              title="Flip board orientation"
+            >
+              ⇅ Flip
+            </button>
+          </div>
+
+          <!-- FEN Input -->
+          <div class="fen-section">
+            <label for="fen-input">FEN Position:</label>
+            <div class="fen-input-group">
+              <input
+                type="text"
+                id="fen-input"
+                placeholder="Paste FEN notation here..."
+                value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+              />
+              <button id="btn-load-fen" class="btn btn-primary">Load</button>
+            </div>
+          </div>
+
+          <!-- Turn Indicator -->
+          <div class="turn-indicator">
+            <span>Turn: </span>
+            <span id="turn-display" class="turn-white">White</span>
+          </div>
+        </section>
+
+        <!-- Analysis Panel -->
+        <section class="panel analysis-panel">
+          <h2>Analysis</h2>
+
+          <!-- Server Status -->
+          <div class="server-status">
+            <span>Server: </span>
+            <span id="server-status" class="status-checking">Checking...</span>
+          </div>
+
+          <!-- Analysis Settings -->
+          <div class="settings-section">
+            <div class="setting">
+              <label for="depth-slider">
+                Depth: <span id="depth-value">20</span>
+              </label>
+              <input
+                type="range"
+                id="depth-slider"
+                min="10"
+                max="30"
+                value="20"
+                step="1"
+              />
+            </div>
+
+            <div class="setting">
+              <label for="lines-slider">
+                Lines: <span id="lines-value">3</span>
+              </label>
+              <input
+                type="range"
+                id="lines-slider"
+                min="1"
+                max="5"
+                value="3"
+                step="1"
+              />
+            </div>
+          </div>
+
+          <!-- Analyze Button -->
+          <button id="btn-analyze" class="btn btn-primary btn-analyze">
+            🔍 Analyze Position
+          </button>
+
+          <!-- Loading Indicator -->
+          <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <span>Analyzing position...</span>
+          </div>
+
+          <!-- Results Section -->
+          <div id="results" class="results-section hidden">
+            <h3>Best Lines</h3>
+            <div id="analysis-lines"></div>
+          </div>
+
+          <!-- Evaluation Bar -->
+          <div class="eval-bar-section">
+            <div class="eval-bar-container">
+              <div class="eval-bar-bg">
+                <div id="eval-bar" class="eval-bar" style="width: 50%"></div>
+              </div>
+            </div>
+            <div id="eval-text" class="eval-text">0.00</div>
+          </div>
+
+          <!-- Error Display -->
+          <div id="error-display" class="error-display hidden"></div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>Powered by Stockfish • Built with ♥</p>
+      </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
