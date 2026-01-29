@@ -1,0 +1,464 @@
+/* ========================================
+   AI Chess Analyzer - Styles
+   Modern purple gradient design
+   ======================================== */
+
+/* CSS Variables */
+:root {
+  --primary: #667eea;
+  --primary-dark: #5a67d8;
+  --secondary: #764ba2;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --light: #f8f9fa;
+  --dark: #2d3748;
+  --white: #ffffff;
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --radius: 16px;
+  --radius-sm: 8px;
+  --transition: all 0.3s ease;
+}
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    sans-serif;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  min-height: 100vh;
+  color: var(--dark);
+  line-height: 1.6;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--white);
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.header .subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* Main Grid */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+}
+
+@media (max-width: 968px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Panels */
+.panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.panel h2 {
+  font-size: 1.4rem;
+  color: var(--dark);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--light);
+}
+
+/* Chessboard */
+.chessboard {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 20px;
+}
+
+/* Board Controls */
+.board-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: var(--light);
+  color: var(--dark);
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
+}
+
+.btn-analyze {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* FEN Section */
+.fen-section {
+  margin-bottom: 16px;
+}
+
+.fen-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.fen-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.fen-input-group input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: "Consolas", monospace;
+  transition: var(--transition);
+}
+
+.fen-input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Turn Indicator */
+.turn-indicator {
+  text-align: center;
+  font-weight: 600;
+  padding: 10px;
+  background: var(--light);
+  border-radius: var(--radius-sm);
+}
+
+.turn-white {
+  color: #1a1a1a;
+  background: linear-gradient(90deg, #f0f0f0, #e0e0e0);
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.turn-black {
+  color: var(--white);
+  background: linear-gradient(90deg, #2d2d2d, #1a1a1a);
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+/* Server Status */
+.server-status {
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background: var(--light);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.status-online {
+  color: var(--success);
+}
+.status-offline {
+  color: var(--danger);
+}
+.status-checking {
+  color: var(--warning);
+}
+
+/* Settings Section */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--light);
+  border-radius: var(--radius-sm);
+}
+
+.setting label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.setting label span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Custom Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  background: #ddd;
+  border-radius: 4px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Results Section */
+.results-section {
+  margin-top: 20px;
+}
+
+.results-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: var(--dark);
+}
+
+/* Analysis Lines */
+.analysis-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--light);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  border-left: 4px solid transparent;
+}
+
+.analysis-line:hover {
+  background: #edf2f7;
+  transform: translateX(4px);
+}
+
+.analysis-line.positive {
+  border-left-color: var(--success);
+}
+
+.analysis-line.negative {
+  border-left-color: var(--danger);
+}
+
+.analysis-line.neutral {
+  border-left-color: #a0aec0;
+}
+
+.line-info {
+  flex: 1;
+}
+
+.line-number {
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.line-moves {
+  font-family: "Consolas", monospace;
+  font-size: 0.9rem;
+  color: #4a5568;
+  word-break: break-word;
+}
+
+.line-score {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  min-width: 70px;
+  text-align: center;
+}
+
+.score-positive {
+  background: rgba(40, 167, 69, 0.15);
+  color: var(--success);
+}
+
+.score-negative {
+  background: rgba(220, 53, 69, 0.15);
+  color: var(--danger);
+}
+
+.score-neutral {
+  background: rgba(160, 174, 192, 0.2);
+  color: #4a5568;
+}
+
+/* Evaluation Bar */
+.eval-bar-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--light);
+}
+
+.eval-bar-container {
+  margin-bottom: 8px;
+}
+
+.eval-bar-bg {
+  height: 24px;
+  background: linear-gradient(90deg, #2d2d2d 50%, #f0f0f0 50%);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.eval-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), #48bb78);
+  transition: width 0.5s ease;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.eval-text {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+/* Error Display */
+.error-display {
+  padding: 14px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  margin-top: 16px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .board-controls {
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+}

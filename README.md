@@ -1,64 +1,81 @@
-# AI-Powered Chess Game Analyzer
+# AI Chess Analyzer
 
-A post-game analysis tool that explains chess moves in clear, coach-like language so beginners and intermediate players can learn why moves were good or bad — not just what the engine says.
-
-Collaborators: @akshhthakkar, @karshs
-
----
-
-## Highlights
-
-- Human-readable, strategic explanations (plans, weaknesses, alternatives)
-- Single clear recommendation per move (no overload of engine lines)
-- Supports PGN paste, file upload, and Chess.com imports
-- Interactive board, move-by-move graph, and Stockfish-backed evaluation
-
-## Usage
-
-- Paste a PGN into the UI, upload a PGN file, or import games from Chess.com by username.
-- Analyses are post-game only — this tool is for learning and review, not live assistance.
+Analyze chess positions with Stockfish engine. Get best moves and evaluations.
 
 ## Features
 
-- Move classification (Best / Good / Inaccuracy / Mistake / Blunder / Brilliant)
-- Move-by-move human explanations focused on plans and consequences
-- Interactive chessboard and evaluation graph
-- Clean, responsive UI with accessibility in mind
+- Interactive drag-and-drop chessboard
+- Multi-line analysis (top 1-5 best moves)
+- Adjustable search depth (10-30)
+- FEN import/export
+- Visual evaluation bar
+
+## Quick Start
+
+### 1. Download Stockfish
+
+- Get it from [stockfishchess.org/download](https://stockfishchess.org/download/)
+- Place `stockfish.exe` in the `engines/` folder
+
+### 2. Install & Run Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate      # Windows
+# source venv/bin/activate # Mac/Linux
+pip install -r requirements.txt
+python app.py
+```
+
+### 3. Run Frontend
+
+```bash
+cd frontend
+python -m http.server 8000
+```
+
+### 4. Open Browser
+
+Go to: **http://localhost:8000**
+
+## Usage
+
+1. **Move pieces** by dragging them on the board
+2. **Adjust settings** using Depth and Lines sliders
+3. **Click "Analyze Position"** to get Stockfish analysis
+4. **View results** showing best moves and evaluation scores
+
+### Understanding Scores
+
+- **Positive (+0.50)**: White is winning by ~0.5 pawns
+- **Negative (-0.50)**: Black is winning by ~0.5 pawns
+- **Near zero**: Position is equal
 
 ## Project Structure
 
 ```
 ai-chess-analyzer/
-├── client/        # React frontend
-├── server/        # Node.js + Express backend
-├── docs/          # Architecture and design documentation
-├── README.md
-└── CONTRIBUTING.md
+├── backend/
+│   ├── app.py              # Flask API server
+│   ├── stockfish_engine.py # Stockfish wrapper
+│   └── requirements.txt    # Python dependencies
+├── frontend/
+│   ├── index.html          # Main page
+│   ├── style.css           # Styling
+│   ├── app.js              # JavaScript logic
+│   └── img/                # Chess piece images
+└── engines/
+    └── stockfish.exe       # Stockfish binary
 ```
 
 ## Tech Stack
 
-- Frontend: React, react-chessboard, chess.js
-- Backend: Node.js, Express, Stockfish
-- DB: MongoDB (Atlas)
-
-## Roadmap / Planned Enhancements
-
-- Configurable Stockfish strength
-- Optional AI-generated explanation layer
-- User accounts and saved history
-- Shareable reports and dark mode
-
-## Contributing
-
-See `CONTRIBUTING.md` for guidelines — welcome pull requests, issues, and suggestions.
-
-## Ethics & Safety
-
-This app does NOT provide live assistance during ongoing games; it is intended solely for post-game learning and improvement.
+- **Backend**: Python, Flask, python-chess
+- **Frontend**: HTML, CSS, JavaScript
+- **Libraries**: Chessboard.js, Chess.js
+- **Engine**: Stockfish
 
 ## License
 
-This project is licensed under the terms in `LICENSE`.
-
----
+MIT License
