@@ -1,115 +1,90 @@
 /**
- * AI Chess Analyzer - Frontend Application
- * Dark Theme Edition
+ * Chess Analyzer Pro - Game Analysis Frontend
  */
 
-// Configuration
 const API_URL = "http://localhost:5000";
-const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // State
 let board = null;
 let game = null;
+let gameHistory = []; // Array of {fen, move, classification, eval, ...}
+let currentMoveIndex = -1; // -1 = starting position
+let analysisResult = null;
 
-// DOM Elements
-const elements = {
-  fenInput: null,
-  depthSlider: null,
-  depthValue: null,
-  linesSlider: null,
-  linesValue: null,
-  btnAnalyze: null,
-  btnStart: null,
-  btnClear: null,
-  btnFlip: null,
-  btnLoadFen: null,
-  loading: null,
-  analysisLines: null,
-  evalBar: null,
-  evalText: null,
-  turnBadge: null,
-  turnDisplay: null,
-  serverBadge: null,
-  serverStatus: null,
-  errorDisplay: null,
-};
+// Elements
+const el = {};
 
-/**
- * Initialize the application
- */
+// Initialize
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Initializing AI Chess Analyzer...");
-  try {
-    initElements();
-    initChessboard();
-    initEventListeners();
-    checkServerHealth();
-    setInterval(checkServerHealth, 30000); // Check every 30s
-    console.log("Initialization complete!");
-  } catch (error) {
-    console.error("Initialization error:", error);
-  }
+  initElements();
+  initChessboard();
+  initEventListeners();
+  checkServerHealth();
+  setInterval(checkServerHealth, 30000);
 });
 
-/**
- * Cache DOM elements
- */
 function initElements() {
-  elements.fenInput = document.getElementById("fen-input");
-  elements.depthSlider = document.getElementById("depth-slider");
-  elements.depthValue = document.getElementById("depth-value");
-  elements.linesSlider = document.getElementById("lines-slider");
-  elements.linesValue = document.getElementById("lines-value");
-  elements.btnAnalyze = document.getElementById("btn-analyze");
-  elements.btnStart = document.getElementById("btn-start");
-  elements.btnClear = document.getElementById("btn-clear");
-  elements.btnFlip = document.getElementById("btn-flip");
-  elements.btnLoadFen = document.getElementById("btn-load-fen");
-  elements.loading = document.getElementById("loading");
-  elements.analysisLines = document.getElementById("analysis-lines");
-  elements.evalBar = document.getElementById("eval-bar");
-  elements.evalText = document.getElementById("eval-text");
-  elements.turnBadge = document.getElementById("turn-badge");
-  elements.turnDisplay = document.getElementById("turn-display");
-  elements.serverBadge = document.getElementById("server-badge");
-  elements.serverStatus = document.getElementById("server-status");
-  elements.errorDisplay = document.getElementById("error-display");
+  // Board navigation
+  el.btnStart = document.getElementById("btn-start");
+  el.btnPrev = document.getElementById("btn-prev");
+  el.btnNext = document.getElementById("btn-next");
+  el.btnEnd = document.getElementById("btn-end");
+  el.btnFlip = document.getElementById("btn-flip");
+
+  // Evaluation
+  el.evalBar = document.getElementById("eval-bar");
+  el.evalText = document.getElementById("eval-text");
+
+  // Tabs
+  el.tabBtns = document.querySelectorAll(".tab-btn");
+  el.tabContents = document.querySelectorAll(".tab-content");
+
+  // Moves tab
+  el.pgnInput = document.getElementById("pgn-input");
+  el.btnLoadPgn = document.getElementById("btn-load-pgn");
+  el.btnAnalyzeGame = document.getElementById("btn-analyze-game");
+  el.moveList = document.getElementById("move-list");
+
+  // Engine tab
+  el.depthSlider = document.getElementById("depth-slider");
+  el.depthValue = document.getElementById("depth-value");
+  el.depthDisplay = document.getElementById("depth-display");
+  el.linesSlider = document.getElementById("lines-slider");
+  el.linesValue = document.getElementById("lines-value");
+  el.btnAnalyze = document.getElementById("btn-analyze");
+  el.loading = document.getElementById("loading");
+  el.analysisLines = document.getElementById("analysis-lines");
+
+  // Report tab
+  el.reportContent = document.getElementById("report-content");
+
+  // Status
+  el.serverBadge = document.getElementById("server-badge");
+  el.serverStatus = document.getElementById("server-status");
+  el.errorDisplay = document.getElementById("error-display");
 }
 
-/**
- * Initialize the chessboard
- */
 function initChessboard() {
-  if (typeof Chess === "undefined") {
-    throw new Error("Chess.js library not loaded");
-  }
-  if (typeof Chessboard === "undefined") {
-    throw new Error("Chessboard.js library not loaded");
+  if (typeof Chess === "undefined" || typeof Chessboard === "undefined") {
+    console.error("Libraries not loaded");
+    return;
   }
 
   game = new Chess();
 
-  const pieceTheme = function (piece) {
-    return "img/chesspieces/wikipedia/" + piece + ".png";
-  };
-
-  const config = {
+  board = Chessboard("board", {
     draggable: true,
     position: "start",
-    pieceTheme: pieceTheme,
+    pieceTheme: (piece) => "img/chesspieces/wikipedia/" + piece + ".png",
     onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd,
-  };
+  });
 
-  board = Chessboard("board", config);
   window.addEventListener("resize", () => board.resize());
-
-  updateFenInput();
-  updateTurnIndicator();
 }
 
-function onDragStart(source, piece, position, orientation) {
+function onDragStart(source, piece) {
   if (game.game_over()) return false;
   if (
     (game.turn() === "w" && piece.search(/^b/) !== -1) ||
@@ -121,234 +96,423 @@ function onDragStart(source, piece, position, orientation) {
 }
 
 function onDrop(source, target) {
-  const move = game.move({
-    from: source,
-    to: target,
-    promotion: "q",
-  });
-
+  const move = game.move({ from: source, to: target, promotion: "q" });
   if (move === null) return "snapback";
 
-  updateFenInput();
-  updateTurnIndicator();
+  // Add to game history
+  gameHistory.push({
+    fen: game.fen(),
+    move: move.san,
+    moveNumber: Math.ceil(game.history().length / 2),
+    isWhite: move.color === "w",
+  });
+  currentMoveIndex = gameHistory.length - 1;
+  updateMoveList();
 }
 
 function onSnapEnd() {
   board.position(game.fen());
 }
 
-/**
- * Event listeners
- */
 function initEventListeners() {
-  elements.depthSlider.addEventListener("input", (e) => {
-    elements.depthValue.textContent = e.target.value;
+  // Tab switching
+  el.tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      el.tabBtns.forEach((b) => b.classList.remove("active"));
+      el.tabContents.forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    });
   });
 
-  elements.linesSlider.addEventListener("input", (e) => {
-    elements.linesValue.textContent = e.target.value;
+  // Move navigation
+  el.btnStart.addEventListener("click", () => goToMove(-1));
+  el.btnPrev.addEventListener("click", () => goToMove(currentMoveIndex - 1));
+  el.btnNext.addEventListener("click", () => goToMove(currentMoveIndex + 1));
+  el.btnEnd.addEventListener("click", () => goToMove(gameHistory.length - 1));
+  el.btnFlip.addEventListener("click", () => board.flip());
+
+  // Keyboard navigation
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") goToMove(currentMoveIndex - 1);
+    if (e.key === "ArrowRight") goToMove(currentMoveIndex + 1);
+    if (e.key === "Home") goToMove(-1);
+    if (e.key === "End") goToMove(gameHistory.length - 1);
   });
 
-  elements.btnStart.addEventListener("click", () => {
-    game.reset();
-    board.start();
-    updateFenInput();
-    updateTurnIndicator();
-    clearResults();
+  // PGN loading
+  el.btnLoadPgn.addEventListener("click", loadPgn);
+  el.btnAnalyzeGame.addEventListener("click", analyzeFullGame);
+
+  // Engine sliders
+  el.depthSlider.addEventListener("input", (e) => {
+    el.depthValue.textContent = e.target.value;
+    el.depthDisplay.textContent = e.target.value;
+  });
+  el.linesSlider.addEventListener("input", (e) => {
+    el.linesValue.textContent = e.target.value;
   });
 
-  elements.btnClear.addEventListener("click", () => {
-    game.clear();
-    board.clear();
-    updateFenInput();
-    updateTurnIndicator();
-    clearResults();
-  });
-
-  elements.btnFlip.addEventListener("click", () => {
-    board.flip();
-  });
-
-  elements.btnLoadFen.addEventListener("click", loadFenFromInput);
-  elements.fenInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") loadFenFromInput();
-  });
-
-  elements.btnAnalyze.addEventListener("click", analyzePosition);
+  // Position analysis
+  el.btnAnalyze.addEventListener("click", analyzePosition);
 }
 
-/**
- * Load FEN from input
- */
-function loadFenFromInput() {
-  const fen = elements.fenInput.value.trim();
+function goToMove(index) {
+  if (index < -1) index = -1;
+  if (index >= gameHistory.length) index = gameHistory.length - 1;
 
-  if (!fen) {
-    showError("Please enter a FEN position");
-    return;
-  }
+  currentMoveIndex = index;
 
-  try {
-    const loaded = game.load(fen);
-    if (loaded === false) {
-      showError("Invalid FEN position");
-      return;
+  // Reset to starting position
+  game.reset();
+
+  // Replay moves up to current index
+  for (let i = 0; i <= currentMoveIndex; i++) {
+    if (gameHistory[i]) {
+      game.move(gameHistory[i].move);
     }
-  } catch (e) {
-    showError("Invalid FEN: " + e.message);
-    return;
   }
 
   board.position(game.fen());
-  updateTurnIndicator();
-  clearResults();
-  hideError();
-}
+  highlightCurrentMove();
 
-function updateFenInput() {
-  elements.fenInput.value = game.fen();
-}
-
-function updateTurnIndicator() {
-  const turn = game.turn();
-  const isWhite = turn === "w";
-  elements.turnDisplay.textContent = isWhite
-    ? "White to move"
-    : "Black to move";
-  elements.turnBadge.className = isWhite ? "turn-badge" : "turn-badge black";
-}
-
-/**
- * Server health check
- */
-async function checkServerHealth() {
-  try {
-    const response = await fetch(`${API_URL}/health`, {
-      method: "GET",
-      mode: "cors",
-    });
-    const data = await response.json();
-
-    if (data.status === "ok") {
-      elements.serverStatus.textContent = "Online";
-      elements.serverBadge.className = "server-badge online";
-    } else {
-      throw new Error("Unhealthy");
+  // Update eval if we have analysis
+  if (analysisResult && currentMoveIndex >= 0) {
+    const moveData = analysisResult.moves[currentMoveIndex];
+    if (moveData) {
+      updateEvalBar(moveData.eval);
     }
-  } catch (error) {
-    elements.serverStatus.textContent = "Offline";
-    elements.serverBadge.className = "server-badge offline";
+  } else {
+    updateEvalBar(0);
   }
 }
 
-/**
- * Analyze position
- */
-async function analyzePosition() {
-  const fen = game.fen();
-  const depth = parseInt(elements.depthSlider.value);
-  const multipv = parseInt(elements.linesSlider.value);
+function highlightCurrentMove() {
+  document
+    .querySelectorAll(".move-cell")
+    .forEach((c) => c.classList.remove("active"));
+  const activeCell = document.querySelector(
+    `.move-cell[data-index="${currentMoveIndex}"]`,
+  );
+  if (activeCell) {
+    activeCell.classList.add("active");
+    activeCell.scrollIntoView({ block: "nearest" });
+  }
+}
 
-  elements.loading.classList.remove("hidden");
-  elements.analysisLines.innerHTML = "";
-  elements.btnAnalyze.disabled = true;
+function loadPgn() {
+  const input = el.pgnInput.value.trim();
+  if (!input) {
+    showError("Please paste PGN or moves");
+    return;
+  }
+
+  // Reset
+  game.reset();
+  gameHistory = [];
+  currentMoveIndex = -1;
+  analysisResult = null;
+
+  // Try to parse as PGN first
+  try {
+    // Remove PGN headers and comments
+    let movesText = input
+      .replace(/\[.*?\]/g, "") // Remove [headers]
+      .replace(/\{.*?\}/g, "") // Remove {comments}
+      .replace(/\(.*?\)/g, "") // Remove (variations)
+      .replace(/\d+\.\.\./g, "") // Remove move numbers with ...
+      .replace(/\d+\./g, " ") // Remove move numbers
+      .replace(/1-0|0-1|1\/2-1\/2|\*/g, "") // Remove result
+      .trim();
+
+    const moves = movesText.split(/\s+/).filter((m) => m.length > 0);
+
+    for (const move of moves) {
+      try {
+        const result = game.move(move);
+        if (result) {
+          gameHistory.push({
+            fen: game.fen(),
+            move: result.san,
+            moveNumber: Math.ceil(game.history().length / 2),
+            isWhite: result.color === "w",
+          });
+        }
+      } catch (e) {
+        console.warn("Invalid move:", move);
+      }
+    }
+
+    if (gameHistory.length === 0) {
+      showError("Could not parse any moves");
+      return;
+    }
+
+    currentMoveIndex = gameHistory.length - 1;
+    board.position(game.fen());
+    updateMoveList();
+    hideError();
+  } catch (e) {
+    showError("Failed to parse PGN: " + e.message);
+  }
+}
+
+function updateMoveList() {
+  el.moveList.innerHTML = "";
+
+  let currentNumber = 0;
+  for (let i = 0; i < gameHistory.length; i++) {
+    const move = gameHistory[i];
+
+    // Add move number
+    if (move.isWhite) {
+      currentNumber = move.moveNumber;
+      const numEl = document.createElement("div");
+      numEl.className = "move-num";
+      numEl.textContent = currentNumber + ".";
+      el.moveList.appendChild(numEl);
+    }
+
+    // Add move cell
+    const cell = document.createElement("div");
+    cell.className = "move-cell";
+    cell.dataset.index = i;
+    cell.textContent = move.move;
+
+    if (move.classification) {
+      cell.classList.add(move.classification);
+    }
+
+    if (i === currentMoveIndex) {
+      cell.classList.add("active");
+    }
+
+    cell.addEventListener("click", () => goToMove(i));
+    el.moveList.appendChild(cell);
+
+    // Add placeholder for black if white move is last
+    if (move.isWhite && i === gameHistory.length - 1) {
+      const placeholder = document.createElement("div");
+      placeholder.className = "move-cell";
+      placeholder.textContent = "...";
+      placeholder.style.opacity = "0.3";
+      el.moveList.appendChild(placeholder);
+    }
+  }
+}
+
+async function analyzeFullGame() {
+  if (gameHistory.length === 0) {
+    showError("Load a game first");
+    return;
+  }
+
+  const moves = gameHistory.map((m) => m.move);
+  const depth = parseInt(el.depthSlider.value);
+
+  el.btnAnalyzeGame.disabled = true;
+  el.btnAnalyzeGame.textContent = "Analyzing...";
+  el.loading.classList.remove("hidden");
   hideError();
 
   try {
-    const response = await fetch(`${API_URL}/api/analyze`, {
+    const response = await fetch(`${API_URL}/api/analyze-game`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fen, depth, multipv }),
+      body: JSON.stringify({ moves, depth }),
     });
 
     const data = await response.json();
 
     if (data.success) {
-      displayResults(data.lines);
+      analysisResult = data;
+
+      // Update gameHistory with classifications
+      for (let i = 0; i < data.moves.length; i++) {
+        if (gameHistory[i]) {
+          gameHistory[i].classification = data.moves[i].classification;
+          gameHistory[i].eval = data.moves[i].eval;
+          gameHistory[i].cpLoss = data.moves[i].cpLoss;
+        }
+      }
+
+      updateMoveList();
+      displayReport(data);
+
+      // Switch to report tab
+      el.tabBtns.forEach((b) => b.classList.remove("active"));
+      el.tabContents.forEach((c) => c.classList.remove("active"));
+      document.querySelector('[data-tab="report"]').classList.add("active");
+      document.getElementById("tab-report").classList.add("active");
     } else {
       showError(data.error || "Analysis failed");
     }
-  } catch (error) {
-    showError(`Connection failed: ${error.message}`);
+  } catch (e) {
+    showError("Connection failed: " + e.message);
   } finally {
-    elements.loading.classList.add("hidden");
-    elements.btnAnalyze.disabled = false;
+    el.btnAnalyzeGame.disabled = false;
+    el.btnAnalyzeGame.textContent = "Analyze Game";
+    el.loading.classList.add("hidden");
   }
 }
 
-/**
- * Display results
- */
-function displayResults(lines) {
-  if (!lines || lines.length === 0) {
-    showError("No analysis lines returned");
-    return;
-  }
+function displayReport(data) {
+  const { accuracy, summary } = data;
 
-  elements.analysisLines.innerHTML = "";
-
-  lines.forEach((line, index) => {
-    const lineEl = createAnalysisLine(line, index + 1);
-    elements.analysisLines.appendChild(lineEl);
-  });
-
-  updateEvalBar(lines[0].score);
-}
-
-function createAnalysisLine(line, num) {
-  const div = document.createElement("div");
-  div.className = "analysis-line";
-
-  const score = line.score || 0;
-  if (score > 50) div.classList.add("positive");
-  else if (score < -50) div.classList.add("negative");
-  else div.classList.add("neutral");
-
-  const movesText = line.moves ? line.moves.join(" ") : "No moves";
-
-  let scoreClass = "score-neutral";
-  if (score > 50) scoreClass = "score-positive";
-  else if (score < -50) scoreClass = "score-negative";
-
-  div.innerHTML = `
-        <div class="line-info">
-            <div class="line-number">Line ${num}</div>
-            <div class="line-moves">${movesText}</div>
+  el.reportContent.innerHTML = `
+        <div class="accuracy-display">
+            <div class="accuracy-item">
+                <div class="accuracy-label">White</div>
+                <div class="accuracy-value white">${accuracy.white}%</div>
+            </div>
+            <div class="accuracy-item">
+                <div class="accuracy-label">Black</div>
+                <div class="accuracy-value black">${accuracy.black}%</div>
+            </div>
         </div>
-        <div class="line-score ${scoreClass}">${line.scoreText || "0.00"}</div>
+        
+        <table class="classification-table">
+            <thead>
+                <tr>
+                    <th>Classification</th>
+                    <th>White</th>
+                    <th>Black</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="class-best">Best</td>
+                    <td>${summary.white.best}</td>
+                    <td>${summary.black.best}</td>
+                </tr>
+                <tr>
+                    <td class="class-excellent">Excellent</td>
+                    <td>${summary.white.excellent}</td>
+                    <td>${summary.black.excellent}</td>
+                </tr>
+                <tr>
+                    <td class="class-good">Good</td>
+                    <td>${summary.white.good}</td>
+                    <td>${summary.black.good}</td>
+                </tr>
+                <tr>
+                    <td class="class-inaccuracy">Inaccuracy</td>
+                    <td>${summary.white.inaccuracy}</td>
+                    <td>${summary.black.inaccuracy}</td>
+                </tr>
+                <tr>
+                    <td class="class-mistake">Mistake</td>
+                    <td>${summary.white.mistake}</td>
+                    <td>${summary.black.mistake}</td>
+                </tr>
+                <tr>
+                    <td class="class-blunder">Blunder</td>
+                    <td>${summary.white.blunder}</td>
+                    <td>${summary.black.blunder}</td>
+                </tr>
+            </tbody>
+        </table>
     `;
+}
 
-  return div;
+async function analyzePosition() {
+  const fen = game.fen();
+  const depth = parseInt(el.depthSlider.value);
+  const multipv = parseInt(el.linesSlider.value);
+
+  el.loading.classList.remove("hidden");
+  el.analysisLines.innerHTML = "";
+  el.btnAnalyze.disabled = true;
+  hideError();
+
+  try {
+    const res = await fetch(`${API_URL}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fen, depth, multipv }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      displayAnalysisLines(data.lines);
+      updateEvalBar(data.lines[0].score);
+    } else {
+      showError(data.error || "Analysis failed");
+    }
+  } catch (e) {
+    showError("Connection failed");
+  } finally {
+    el.loading.classList.add("hidden");
+    el.btnAnalyze.disabled = false;
+  }
+}
+
+function displayAnalysisLines(lines) {
+  el.analysisLines.innerHTML = "";
+
+  lines.forEach((line, i) => {
+    const div = document.createElement("div");
+    div.className = "analysis-line";
+
+    const score = line.score || 0;
+    if (score > 50) div.classList.add("positive");
+    else if (score < -50) div.classList.add("negative");
+
+    const moves = line.moves ? line.moves.join(" ") : "";
+
+    let scoreClass = "";
+    if (score > 50) scoreClass = "score-positive";
+    else if (score < -50) scoreClass = "score-negative";
+
+    div.innerHTML = `
+            <div class="line-rank">${i + 1}</div>
+            <div class="line-content">
+                <div class="line-moves">${moves}</div>
+            </div>
+            <div class="line-score ${scoreClass}">${line.scoreText || "0.00"}</div>
+        `;
+
+    el.analysisLines.appendChild(div);
+  });
 }
 
 function updateEvalBar(score) {
-  const cappedScore = Math.max(-1000, Math.min(1000, score || 0));
-  const percentage = 50 + cappedScore / 20;
+  const capped = Math.max(-1000, Math.min(1000, score || 0));
+  const pct = 50 + capped / 20;
 
-  elements.evalBar.style.width = `${percentage}%`;
+  el.evalBar.style.width = pct + "%";
 
-  const displayScore = ((score || 0) / 100).toFixed(2);
-  elements.evalText.textContent =
-    score >= 0 ? `+${displayScore}` : displayScore;
+  const display = ((score || 0) / 100).toFixed(2);
+  el.evalText.textContent = score >= 0 ? "+" + display : display;
 
-  // Update score color class
-  elements.evalText.className = "eval-score";
-  if (score > 50) elements.evalText.classList.add("positive");
-  else if (score < -50) elements.evalText.classList.add("negative");
+  el.evalText.className = "eval-score";
+  if (score > 50) el.evalText.classList.add("positive");
+  else if (score < -50) el.evalText.classList.add("negative");
 }
 
-function clearResults() {
-  elements.analysisLines.innerHTML = "";
-  elements.evalBar.style.width = "50%";
-  elements.evalText.textContent = "0.00";
-  elements.evalText.className = "eval-score";
+async function checkServerHealth() {
+  try {
+    const res = await fetch(`${API_URL}/health`);
+    const data = await res.json();
+
+    if (data.status === "ok") {
+      el.serverStatus.textContent = "Online";
+      el.serverBadge.className = "status-indicator online";
+    } else {
+      throw new Error();
+    }
+  } catch {
+    el.serverStatus.textContent = "Offline";
+    el.serverBadge.className = "status-indicator";
+  }
 }
 
-function showError(message) {
-  elements.errorDisplay.textContent = message;
-  elements.errorDisplay.classList.remove("hidden");
+function showError(msg) {
+  el.errorDisplay.textContent = msg;
+  el.errorDisplay.classList.remove("hidden");
 }
 
 function hideError() {
-  elements.errorDisplay.classList.add("hidden");
+  el.errorDisplay.classList.add("hidden");
 }

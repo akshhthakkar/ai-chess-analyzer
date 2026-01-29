@@ -154,6 +154,80 @@ def get_best_move():
         }), 500
 
 
+@app.route("/api/analyze-game", methods=["POST"])
+def analyze_game():
+    """
+    Analyze a full chess game and classify each move.
+    
+    Request Body:
+        {
+            "moves": ["e4", "e5", "Nf3", "Nc6", ...],  // SAN notation
+            "depth": 18   // Optional, default 18
+        }
+    
+    Response:
+        {
+            "success": true,
+            "moves": [
+                {
+                    "moveNumber": 1,
+                    "move": "e4",
+                    "isWhite": true,
+                    "eval": 20,
+                    "evalText": "+0.20",
+                    "classification": "best",
+                    "cpLoss": 0
+                },
+                ...
+            ],
+            "accuracy": {
+                "white": 85.6,
+                "black": 81.9
+            },
+            "summary": {
+                "white": {"best": 10, "excellent": 5, ...},
+                "black": {"best": 8, "excellent": 6, ...}
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or "moves" not in data:
+            return jsonify({
+                "success": False,
+                "error": "Missing 'moves' in request body"
+            }), 400
+        
+        moves = data["moves"]
+        depth = min(data.get("depth", 18), 24)  # Cap for performance
+        
+        if not isinstance(moves, list) or len(moves) == 0:
+            return jsonify({
+                "success": False,
+                "error": "Moves must be a non-empty list"
+            }), 400
+        
+        engine = get_analyzer()
+        result = engine.analyze_game(moves, depth=depth)
+        
+        if result["success"]:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except RuntimeError as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
+
+
 if __name__ == "__main__":
     print("=" * 50)
     print("AI Chess Analyzer Backend")
