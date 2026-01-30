@@ -1,6 +1,5 @@
 # ♟️ AI Chess Analyzer
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![Status](https://img.shields.io/badge/status-active-success)
 
@@ -146,7 +145,3 @@ ai-chess-analyzer/
 
 - **Aksh Thakkar** - [@akshhthakkar](https://github.com/akshhthakkar)
 - **Karshs** - [@karshs](https://github.com/karshs)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
